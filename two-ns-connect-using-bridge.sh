@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Step 0: Check basic network status on host machine/root namespace
+# Check basic network status on the host machine/root namespace
 
 sudo ip link
 sudo ip route
@@ -8,7 +8,7 @@ sudo route -n
 sudo lsns
 sudo ip netns list
 
-# Step 1: Create a bridge network and attach ip to that interface
+# Create a bridge network and attach ip to that interface
 
 sudo ip link add br0 type bridge
 sudo ip link set br0 up
@@ -31,7 +31,7 @@ sudo ip netns exec ns1 ip link
 sudo ip netns exec ns2 ip link set lo up
 sudo ip netns exec ns2 ip link
 
-# Step 3: create two veth interface for two network ns
+# Create two veth interface for two network ns
 
 # For ns1:
 
@@ -63,7 +63,7 @@ sudo ip netns exec ns2 ip route add default via 192.168.1.1/24
 sudo ip netns exec ns2 ip route 
 sudo ip netns exec ns2 ping 192.168.1.1
 
-# Step 5: Test network Connectivity between two network namespace
+# Test network Connectivity between two network namespace
 
 # from ns1: 
 
@@ -81,7 +81,7 @@ ping -c -2 192.168.1.1
 ping -c -2 192.168.1.10
 ping host ip
 
-# Step 6: Connect to the internet
+# Connect to the internet
 
 # sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 ! -o br0 -j MASQUERADE
 sudo iptables \
@@ -90,25 +90,25 @@ sudo iptables \
         -s 192.168.1.0/24 ! -o br0 \
         -j MASQUERADE
 
-#To get around that, we can make use of NAT (network address translation) 
-# by placing an iptables rule in the POSTROUTING chain of the nat table:
+# To get around that, we can make use of NAT (network address translation) 
+# By placing an iptables rule in the POSTROUTING chain of the nat table:
 
 # -t specifies the table to which the commands
-# should be directed to. By default it's `filter`.
-#
+# should be directed to. By defaulting it's `filter`.
+
 # -A specifies that we're appending a rule to the
 # chain the we tell the name after it;
-#
+
 # -s specifies a source address (with a mask in 
 # this case).
-#
+
 # -j specifies the target to jump to (what action to
 # take).
 
 sudo ip netns exec ns1 ping 8.8.8.8
 sudo ip netns exec ns2 ping 8.8.8.8
 
-# step 7: listen for the requests
+# Listen for the requests
 
 sudo nsenter --net=/var/run/netns/netns1
 python3 -m http.server --bind 192.168.1.10 5000
