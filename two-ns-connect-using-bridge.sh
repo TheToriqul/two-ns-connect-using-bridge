@@ -19,12 +19,6 @@ sudo ip netns add green    # Create a network namespace named green
 sudo ip netns list         # List all network namespaces
 sudo ls /var/run/netns/    # List the network namespace files in the /var/run/netns/ directory
 
-# Set up loopback interfaces in namespaces
-sudo ip netns exec red ip link set lo up        # Set up the loopback interface in the red namespace
-sudo ip netns exec red ip link                  # Display the interfaces in the red namespace
-sudo ip netns exec green ip link set lo up      # Set up the loopback interface in the green namespace
-sudo ip netns exec green ip link                # Display the interfaces in the green namespace
-
 # Create veth interfaces for the namespaces
 # For red namespace
 sudo ip link add veth_red type veth peer name veth_br    # Create a veth pair with one end in the root namespace and the other end in the red namespace
