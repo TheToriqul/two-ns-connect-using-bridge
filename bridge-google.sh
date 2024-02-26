@@ -1,67 +1,91 @@
 #!/bin/bash
 
-# Check basic network status on the host machine/root namespace
-sudo ip link                                     # List all network interfaces
-sudo ip route                                    # Show the routing table
-sudo route -n                                    # Show the routing table in a numeric format
-sudo lsns                                        # List all network namespaces
-sudo ip netns list                              # List all network namespaces
+# Step 0: Check basic network status on host machine/root namespace
+sudo ip link                                              # Display information about network interfaces
+sudo ip route                                             # Show the kernel routing table
+sudo route -n                                            # Show the kernel routing table (alternative command)
+sudo lsns                                                 # List all network namespaces
+sudo ip netns list                                    # List all network namespaces (alternative command)
 
-# Create a bridge network and attach IP to that interface
-sudo ip link add br0 type bridge                # Create a bridge interface named br0
-sudo ip link set br0 up                         # Activate the bridge interface br0
-sudo ip addr add 192.168.1.1/24 dev br0         # Assign an IP address to the bridge interface br0
-sudo ip addr                                    # Display IP addresses assigned to all interfaces
+# Step 1: Create a bridge network and attach IP to that interface
+sudo ip link add br0 type bridge                    # Create a bridge interface named br0
+sudo ip link set br0 up                                  # Activate the bridge interface
+sudo ip addr add 192.168.1.1/24 dev br0       # Assign an IP address to the bridge interface
+sudo ip addr                                              # Display IP addresses assigned to interfaces
+ping -c 2 192.168.1.1                                   # Ping the bridge interface to test connectivity
 
-# Create two network namespaces
-sudo ip netns add red                           # Create a network namespace named red
-sudo ip netns add green                         # Create a network namespace named green
-sudo ip netns list                              # List all network namespaces
-sudo ls /var/run/netns/                         # List the network namespace files in the /var/run/netns/ directory
+# Step 2: Create two network namespaces
+sudo ip netns add red                                  # Create a network namespace named red
+sudo ip netns add green                             # Create a network namespace named green
+sudo ip netns list                                    # List all network namespaces
+sudo ls /var/run/netns/                            # List network namespace files in the filesystem
 
-# Set up loopback interfaces in namespaces
-sudo ip netns exec red ip link set lo up        # Set up the loopback interface in the red namespace
-sudo ip netns exec red ip link                  # Display the interfaces in the red namespace
-sudo ip netns exec green ip link set lo up      # Set up the loopback interface in the green namespace
-sudo ip netns exec green ip link                # Display the interfaces in the green namespace
+# Step 3: Loopback interface set up
+sudo ip netns exec red ip link set lo up       # Enable loopback interface in red namespace
+sudo ip netns exec red ip link                           # Display network interfaces in red namespace
+sudo ip netns exec green ip link set lo up    # Enable loopback interface in green namespace
+sudo ip netns exec green ip link                     # Display network interfaces in green namespace
 
-# Create two veth interfaces for two network namespaces
-# For red namespace
-sudo ip link add veth_red type veth peer name ceth_red  # Create a veth pair with one end in the root namespace and the other end in the red namespace
-sudo ip link set veth_red master br0                     # Attach one end of the veth pair to the bridge br0
-sudo ip link set veth_red up                              # Activate the veth_red interface
-sudo ip link                                               # List all network interfaces
-sudo ip link set ceth_red netns red                      # Move the other end of the veth pair to the red namespace
-sudo ip netns exec red ip link set ceth_red up           # Activate the ceth_red interface in the red namespace
-sudo ip netns exec red ip addr add 192.168.1.10/24 dev ceth_red  # Assign an IP address to the ceth_red interface in the red namespace
+# Step 4: Create two veth interfaces for two network namespaces
+# For red:
+sudo ip link add veth0 type veth peer name ceth0  # Create a pair of veth interfaces (veth0 and ceth0)
+sudo ip link set veth0 master br0                           # Attach veth0 to the bridge br0
+sudo ip link set veth0 up                                       # Activate veth0
+sudo ip link                                                           # Display all network interfaces
+sudo ip link set ceth0 netns red                              # Move ceth0 to red namespace
+sudo ip netns exec red ip link set ceth0 up          # Activate ceth0 in red namespace
+sudo ip netns exec red ip addr add 192.168.1.10/24 dev ceth0    # Assign IP address to ceth0 in red namespace
+sudo ip netns exec red ping -c 2 192.168.1.10             # Ping ceth0 from within red namespace
+sudo ip netns exec red ip route add default via 192.168.1.1    # Add default route in red namespace
+sudo ip netns exec red ip route                                        # Display routing table in red namespace
+sudo ip netns exec red ping -c 2 192.168.1.1                # Ping the bridge from red namespace
 
-# For green namespace
-sudo ip link add veth_green type veth peer name ceth_green  # Create a veth pair with one end in the root namespace and the other end in the green namespace
-sudo ip link set veth_green master br0                       # Attach one end of the veth pair to the bridge br0
-sudo ip link set veth_green up                                # Activate the veth_green interface
-sudo ip link                                                 # List all network interfaces
-sudo ip link set ceth_green netns green                      # Move the other end of the veth pair to the green namespace
-sudo ip netns exec green ip link set ceth_green up           # Activate the ceth_green interface in the green namespace
-sudo ip netns exec green ip addr add 192.168.1.11/24 dev ceth_green  # Assign an IP address to the ceth_green interface in the green namespace
+# For green:
+sudo ip link add veth1 type veth peer name ceth1    # Create a pair of veth interfaces (veth1 and ceth1)
+sudo ip link set veth1 master br0                            # Attach veth1 to the bridge br0
+sudo ip link set veth1 up                                        # Activate veth1
+sudo ip link                                                            # Display all network interfaces
+sudo ip link set ceth1 netns green                         # Move ceth1 to green namespace
+sudo ip netns exec green ip link set ceth1 up       # Activate ceth1 in green namespace
+sudo ip netns exec green ip addr add 192.168.1.11/24 dev ceth1   # Assign IP address to ceth1 in green namespace
+sudo ip netns exec green ping -c 2 192.168.1.11              # Ping ceth1 from within green namespace
+sudo ip netns exec green ip route add default via 192.168.1.1     # Add default route in green namespace
+sudo ip netns exec green ip route                                      # Display routing table in green namespace
+sudo ip netns exec green ping -c 2 192.168.1.1                  # Ping the bridge from green namespace
 
-# Test network connectivity between namespaces
-sudo ip netns exec red ping -c 2 192.168.1.1     # Ping the bridge IP address from the red namespace
-sudo ip netns exec red ping -c 2 192.168.1.11    # Ping the IP address assigned to the ceth_green interface from the red namespace
-sudo ip netns exec green ping -c 2 192.168.1.1   # Ping the bridge IP address from the green namespace
-sudo ip netns exec green ping -c 2 192.168.1.10  # Ping the IP address assigned to the ceth_red interface from the green namespace
+# Step 5: Test network connectivity between two network namespaces
+# from red:
+sudo ip netns exec red ping -c 2 192.168.1.10            # Ping ceth0 from red namespace
+sudo ip netns exec red ping -c 2 192.168.1.1               # Ping bridge from red namespace
+sudo ip netns exec red ping -c 2 192.168.1.11              # Ping ceth1 from red namespace
+ping -c 2 <host_IP_address>                              # Ping host from red namespace
 
-# Connect to the internet
-sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 ! -o br0 -j MASQUERADE  # Enable NAT for traffic going out from the bridge interface
+# from green:
+sudo ip netns exec green ping -c 2 192.168.1.11       # Ping ceth1 from green namespace
+sudo ip netns exec green ping -c 2 192.168.1.1          # Ping bridge from green namespace
+sudo ip netns exec green ping -c 2 192.168.1.10         # Ping ceth0 from green namespace
+ping -c 2 <host_IP_address>                              # Ping host from green namespace
 
-# Test internet connectivity from namespaces
-sudo ip netns exec red ping -c 2 8.8.8.8        # Ping Google's public IP from the red namespace
-sudo ip netns exec green ping -c 2 8.8.8.8      # Ping Google's public IP from the green namespace
+# Step 6: Connect to the internet
+sudo iptables \
+        -t nat \
+        -A POSTROUTING \
+        -s 192.168.1.0/24 ! -o br0 \
+        -j MASQUERADE                                                  # Enable NAT for internet connectivity
 
-# Listen for requests
-sudo ip netns exec red python3 -m http.server --bind 192.168.1.10 5000  # Start an HTTP server listening on port 5000 in the red namespace
+sudo ip netns exec red ping 8.8.8.8                                     # Test internet connectivity from red namespace
+sudo ip netns exec green ping 8.8.8.8                                # Test internet connectivity from green namespace
 
-# Forward requests to the server
-sudo iptables -t nat -A PREROUTING -d 172.31.13.55 -p tcp -m tcp --dport 5000 -j DNAT --to-destination 192.168.1.10:5000  # Forward incoming TCP traffic on port 5000 to the HTTP server in the red namespace
+# step 7: Listen for the requests
+sudo ip netns exec red python3 -m http.server --bind 192.168.1.10 5000         # Start HTTP server in red namespace
+
+sudo iptables \
+        -t nat \
+        -A PREROUTING \
+        -d <host_IP_address> \
+        -p tcp -m tcp \
+        --dport 5000 \
+        -j DNAT --to-destination 192.168.1.10:5000                  # Set up port forwarding for HTTP traffic
 
 # Run telnet from another source
-telnet 65.2.35.192 5000  # Connect to the server using telnet
+telnet <host_IP_address> 5000                                        # Test port forwarding using telnet
