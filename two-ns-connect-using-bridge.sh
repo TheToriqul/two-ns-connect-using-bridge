@@ -1,128 +1,47 @@
 #!/bin/bash
 
 # Check basic network status on the host machine/root namespace
-
 sudo ip link
 sudo ip route
 sudo route -n
 sudo lsns
 sudo ip netns list
 
-# Create a bridge network and attach ip to that interface
-
+# Create a bridge network and attach IP to that interface
 sudo ip link add br0 type bridge
 sudo ip link set br0 up
 sudo ip addr add 192.168.1.1/24 dev br0
 sudo ip addr
 
-ping 192.168.1.1
-
-# Step 2: Create two network namespace
-
-sudo ip netns add ns1
-sudo ip netns add ns2
+# Create network namespaces
+sudo ip netns add red
+sudo ip netns add green
 sudo ip netns list
 sudo ls /var/run/netns/
 
+# Set up loopback interfaces in namespaces
+sudo ip netns exec red ip link set lo up
+sudo ip netns exec red ip link
+sudo ip netns exec green ip link set lo up
+sudo ip netns exec green ip link
 
-sudo ip netns exec ns1 ip link set lo up
-sudo ip netns exec ns1 ip link
+# Create veth interfaces for the namespaces
+# For red namespace
+sudo ip link add veth_red type veth peer name veth_br
+sudo ip link set veth_red netns red
+sudo ip link set veth_br master br0
+sudo ip link set veth_br up
+sudo ip link set veth_red up
+sudo ip netns exec red ip addr add 192.168.1.10/24 dev veth_red
 
-sudo ip netns exec ns2 ip link set lo up
-sudo ip netns exec ns2 ip link
+# For green namespace
+sudo ip link add veth_green type veth peer name veth_br
+sudo ip link set veth_green netns green
+sudo ip link set veth_green up
+sudo ip netns exec green ip addr add 192.168.1.11/24 dev veth_green
 
-# Create two veth interface for two network ns
-
-# For ns1:
-
-sudo ip link add veth0 type veth peer name ceth0
-sudo ip link set veth0 master br0
-sudo ip link set veth0 up
-sudo ip link 
-sudo ip link set ceth0 netns ns1
-sudo ip netns exec ns1 ip link set ceth0 up
-
-sudo ip netns exec ns1 ip addr add 192.168.1.10/24 dev ceth0
-sudo ip netns exec ns1 ping 192.168.1.10
-sudo ip netns exec ns1 ip route add default via 192.168.1.1/24
-sudo ip netns exec ns1 ip route 
-sudo ip netns exec ns1 ping 192.168.1.1
-
-# For ns2:
-
-sudo ip link add veth1 type veth peer name ceth1
-sudo ip link set veth1 master br0
-sudo ip link set veth1 up
-sudo ip link 
-sudo ip link set ceth1 netns ns2
-sudo ip netns exec ns2 ip link set ceth1 up
-
-sudo ip netns exec ns2 ip addr add 192.168.1.11/24 dev ceth1
-sudo ip netns exec ns2 ping 192.168.1.11
-sudo ip netns exec ns2 ip route add default via 192.168.1.1/24 
-sudo ip netns exec ns2 ip route 
-sudo ip netns exec ns2 ping 192.168.1.1
-
-# Test network Connectivity between two network namespace
-
-# from ns1: 
-
-sudo nsenter --net=/var/run/netns/ns1
-ping -c -2 192.168.1.10
-ping -c -2 192.168.1.1
-ping -c -2 192.168.1.11
-ping -c -2 host ip
-
-# from ns2: 
-
-sudo nsenter --net=/var/run/netns/ns2
-ping -c -2 192.168.1.11
-ping -c -2 192.168.1.1
-ping -c -2 192.168.1.10
-ping host ip
-
-# Connect to the internet
-
-# sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 ! -o br0 -j MASQUERADE
-sudo iptables \
-        -t nat \
-        -A POSTROUTING \
-        -s 192.168.1.0/24 ! -o br0 \
-        -j MASQUERADE
-
-# To get around that, we can make use of NAT (network address translation) 
-# By placing an iptables rule in the POSTROUTING chain of the nat table:
-
-# -t specifies the table to which the commands
-# should be directed to. By defaulting it's `filter`.
-
-# -A specifies that we're appending a rule to the
-# chain the we tell the name after it;
-
-# -s specifies a source address (with a mask in 
-# this case).
-
-# -j specifies the target to jump to (what action to
-# take).
-
-sudo ip netns exec ns1 ping 8.8.8.8
-sudo ip netns exec ns2 ping 8.8.8.8
-
-# Listen for the requests
-
-sudo nsenter --net=/var/run/netns/netns1
-python3 -m http.server --bind 192.168.1.10 5000
-
-# sudo iptables -t nat -A PREROUTING -d 172.31.13.55 -p tcp -m tcp --dport 5000 -j DNAT --to-destination 192.168.1.10:5000
-
-sudo iptables \
-        -t nat \
-        -A PREROUTING \
-        -d 172.31.13.55 \
-        -p tcp -m tcp \
-        --dport 5000 \
-        -j DNAT --to-destination 192.168.1.10:5000
-
-# run telnet from another source
-
-telnet 65.2.35.192 5000
+# Test network connectivity between namespaces
+sudo ip netns exec red ping -c 2 192.168.1.1
+sudo ip netns exec red ping -c 2 192.168.1.11
+sudo ip netns exec green ping -c 2 192.168.1.1
+sudo ip netns exec green ping -c 2 192.168.1.10
