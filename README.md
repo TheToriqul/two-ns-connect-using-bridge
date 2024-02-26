@@ -92,6 +92,7 @@ The script commences by meticulously examining the host machine's network status
 * **Similar commands are repeated for the `green` namespace**, creating `veth1` and `ceth1`, assigning an IP address (`192.168.1.11/24`), and configuring routing.
 
 **Step 5: Test Connectivity between Namespaces (Lines 56-67)**
+The commands are executed within `sudo ip netns exec red` to test connectivity from the `red` namespace:
 
 * `ping -c 2 192.168.1.1`: Pings the bridge IP address from the `red` namespace.
 * `ping -c 2 192.168.1.11`: Pings the IP address of the `green` namespace (`ceth1`) from the `red` namespace.
