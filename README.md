@@ -1,4 +1,4 @@
-## Connecting Two Islands: Namespaces Bridged Together
+## Connecting Two Islands: Namespaces Bridged Together and Connected to the Internet
 
 Imagine two separate islands, each with its own unique environment and resources. To connect and enable communication between them, we can build a bridge. This project is similar, but instead of physical islands, we're dealing with virtual namespaces.
 
