@@ -1,4 +1,4 @@
-## Connecting Two Islands: Namespaces Bridged Together and Connected to the Internet
+# Connecting Two Islands: Namespaces Bridged Together and Connected to the Internet
 
 Imagine two separate islands, each with its own unique environment and resources. To connect and enable communication between them, we can build a bridge. This project is similar, but instead of physical islands, we're dealing with virtual namespaces.
 
@@ -34,7 +34,7 @@ Think of the bridge as a central hub, forwarding messages between the two island
 - **Process Isolation:** Isolate critical processes from the main system for enhanced reliability and security.
 
 
-# Deep Dive into Network Namespaces and Bridging: A Step-by-Step Analysis
+## Deep Dive into Network Namespaces and Bridging: A Step-by-Step Analysis
 
 The provided script delves into the realm of network namespaces and bridging, creating isolated network environments and enabling their communication with the internet. It also demonstrates setting up a basic server and port forwarding. Let's dissect each step, unraveling the underlying concepts and their significance:
 
