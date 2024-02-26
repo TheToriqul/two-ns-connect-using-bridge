@@ -38,7 +38,7 @@ Think of the bridge as a central hub, forwarding messages between the two island
 
 The provided script delves into the realm of network namespaces and bridging, creating isolated network environments and enabling their communication with the internet. It also demonstrates setting up a basic server and port forwarding. Let's dissect each step, unraveling the underlying concepts and their significance:
 
-**0. Initial Network Assessment:**
+**Step 0: Initial Network Assessment:**
 
 The script commences by meticulously examining the host machine's network status using various commands:
 
@@ -108,14 +108,12 @@ Similar commands are executed within `sudo ip netns exec green` to test connecti
 * `! -o br0`: Excludes packets that are already leaving through the bridge interface (`br0`).
 * `-j MASQUERADE`: Instructs the firewall to rewrite the source IP address of the packets to the IP address of the host machine, enabling them to reach the internet through the host's connection.
 
-**Uncommenting and running these lines allow internet access within the namespaces.**
-
 **Step 7: Listen for Requests (Lines 75-80)**
 
 * This section demonstrates setting up a simple HTTP server within the `red` namespace.
 * `sudo ip netns exec red python3 -m http.server --bind 192.168.1.10 5000`: This command starts a server listening on port 5000 within the `red` namespace, accessible at its IP address (`192.168.1.10`).
 
-**Additional configuration (commented out) is required to forward traffic from the host machine to the server:**
+**Additional configuration is required to forward traffic from the host machine to the server:**
 
 * `sudo iptables`: Similar to Step 6, this line is used for firewall rules.
 * `-t nat`: Specifies the NAT table.
@@ -124,11 +122,11 @@ Similar commands are executed within `sudo ip netns exec green` to test connecti
 * `-p tcp -m tcp --dport 5000`: Selects incoming TCP packets directed to port 5000 on the host machine.
 * `-j DNAT --to-destination 192.168.1.10:5000`: Redirects those packets to the server running in the `red` namespace on port 5000.
 
-**Uncommenting and applying these rules allow accessing the server from outside the namespaces using the host machine's IP address and port 5000.**
+**Applying these rules allow accessing the server from outside the namespaces using the host machine's IP address and port 5000.**
 
 **Step 8: Run Telnet (Line 82)**
 
-* This line is commented out and demonstrates testing the port forwarding using the `telnet` command.
+* This line is demonstrates testing the port forwarding using the `telnet` command.
 * Replace `<host_IP_address>` with the IP address of your host machine and run the command to connect to port 5000 and interact with the server.
 
 **Remember:**
