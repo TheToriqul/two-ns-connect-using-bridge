@@ -32,7 +32,7 @@ sudo ip link add veth0 type veth peer name ceth0                  # Create a pai
 sudo ip link set veth0 master br0                                 # Attach veth0 to the bridge br0 after creation
 sudo ip link set veth0 up
 sudo ip link                                                      # Display all network interfaces
-sudo ip netns exec red ip link set ceth0 netns red                # Move ceth0 to red namespace and activate it within the namespace
+sudo ip link set ceth0 netns red                # Move ceth0 to red namespace and activate it within the namespace
 sudo ip netns exec red ip link set ceth0 up
 sudo ip netns exec red ip addr add 192.168.1.10/24 dev ceth0      # Assign IP address to ceth0 after attaching it to the namespace
 sudo ip netns exec red ping -c 2 192.168.1.10                     # Test connectivity within the red namespace and add default route
@@ -45,7 +45,7 @@ sudo ip link add veth1 type veth peer name ceth1
 sudo ip link set veth1 master br0
 sudo ip link set veth1 up
 sudo ip link
-sudo ip netns exec green ip link set ceth1 netns green
+sudo ip link set ceth1 netns green
 sudo ip netns exec green ip link set ceth1 up
 sudo ip netns exec green ip addr add 192.168.1.11/24 dev ceth1
 sudo ip netns exec green ping -c 2 192.168.1.11
