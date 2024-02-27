@@ -54,7 +54,7 @@ The script commences by meticulously examining the host machine's network status
 - `lsns`: Lists currently established network namespaces.
 - `ip netns list`: Provides a more comprehensive overview of available network namespaces, including their PIDs and creation times.
 
-**Step 1: Create Bridge Network (Lines 6-10)**
+**Step 1: Create Bridge Network**
 
 * `sudo ip link add br0 type bridge`: Creates a new bridge interface named `br0`.
 * `sudo ip link set br0 up`: Activates the bridge interface.
@@ -62,20 +62,20 @@ The script commences by meticulously examining the host machine's network status
 * `sudo ip addr`: Displays information about all network interfaces, including the newly created bridge.
 * `ping -c 2 192.168.1.1`: Tests connectivity to the bridge by pinging its IP address.
 
-**Step 2: Create Network Namespaces (Lines 12-14)**
+**Step 2: Create Network Namespaces**
 
 * `sudo ip netns add red`: Creates a new network namespace named `red`.
 * `sudo ip netns add green`: Creates another new network namespace named `green`.
 * `sudo ip netns list`: Lists all existing network namespaces on the system.
 * `sudo ls /var/run/netns/`: Shows the files representing the created namespaces in the filesystem.
 
-**Step 3: Enable Loopback Interfaces (Lines 16-19)**
+**Step 3: Enable Loopback Interfaces**
 
 * `sudo ip netns exec red ip link set lo up`: Activates the loopback interface (lo) within the `red` namespace, allowing basic network communication within the namespace.
 * `sudo ip netns exec red ip link`: Displays information about network interfaces within the `red` namespace.
 * Similar commands are repeated for the `green` namespace, enabling its loopback interface.
 
-**Step 4: Create and Connect Veth Interfaces (Lines 21-54)**
+**Step 4: Create and Connect Veth Interfaces**
 
 * **For red namespace:**
     * `sudo ip link add veth0 type veth peer name ceth0`: Creates a pair of virtual ethernet interfaces named `veth0` and `ceth0`. They act like virtual cables connecting the namespaces to the bridge.
@@ -91,7 +91,7 @@ The script commences by meticulously examining the host machine's network status
         * `ping -c 2 192.168.1.1`: Tests connectivity to the bridge from the `red` namespace.
 * **Similar commands are repeated for the `green` namespace**, creating `veth1` and `ceth1`, assigning an IP address (`192.168.1.11/24`), and configuring routing.
 
-**Step 5: Test Connectivity between Namespaces (Lines 56-67)**
+**Step 5: Test Connectivity between Namespaces**
 
 The commands are executed within `sudo ip netns exec red` to test connectivity from the `red` namespace:
 
@@ -106,7 +106,7 @@ Similar commands are executed within `sudo ip netns exec green` to test connecti
 * `ping -c 2 192.168.1.10`: Pings the IP address of the `red` namespace (`ceth0`) from the `green` namespace.
 * `ping -c 2 <host_IP_address>`: Replace `<host_IP_address>` with a real IP address and ping it from the `green` namespace (requires additional configuration).
 
-**Step 6: Connect to the Internet (Lines 69-73)**
+**Step 6: Connect to the Internet**
 
 * These lines are commented out by default. Uncommenting and applying them enables internet access for the namespaces.
 * `sudo iptables`: This command is used to configure firewall rules.
@@ -116,7 +116,7 @@ Similar commands are executed within `sudo ip netns exec green` to test connecti
 * `! -o br0`: Excludes packets that are already leaving through the bridge interface (`br0`).
 * `-j MASQUERADE`: Instructs the firewall to rewrite the source IP address of the packets to the IP address of the host machine, enabling them to reach the internet through the host's connection.
 
-**Step 7: Listen for Requests (Lines 75-80)**
+**Step 7: Listen for Requests**
 
 * This section demonstrates setting up a simple HTTP server within the `red` namespace.
 * `sudo ip netns exec red python3 -m http.server --bind 192.168.1.10 5000`: This command starts a server listening on port 5000 within the `red` namespace, accessible at its IP address (`192.168.1.10`).
@@ -132,7 +132,7 @@ Similar commands are executed within `sudo ip netns exec green` to test connecti
 
 **Applying these rules allow accessing the server from outside the namespaces using the host machine's IP address and port 5000.**
 
-**Step 8: Run Telnet (Line 82)**
+**Step 8: Run Telnet**
 
 * This line is demonstrates testing the port forwarding using the `telnet` command.
 * Replace `<host_IP_address>` with the IP address of your host machine and run the command to connect to port 5000 and interact with the server.
