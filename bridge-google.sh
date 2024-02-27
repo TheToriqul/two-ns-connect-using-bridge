@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Step 0: Check basic network status on host machine/root namespace
+# Step 0: Check basic package installation & network status on host machine/root namespace
 sudo apt update -y
 sudo apt upgrage -y
 sudo apt install net-tools -y
@@ -78,6 +78,10 @@ sudo ip netns exec green ping -c 2 <host_IP_address>
 # Step 6: Connect to the internet
 sudo iptables -t nat -L -n -v                                         # Checking the iptables rules
 sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -j MASQUERADE   # Enable NAT for internet connectivity
+
+# In case if still it not works then we may need to add some additional firewall rules.
+sudo iptables --append FORWARD --in-interface br0 --jump ACCEPT
+sudo iptables --append FORWARD --out-interface br0 --jump ACCEPT
 
 # Test internet connectivity from both namespaces (replace `<host_IP_address>` with actual IP)
 sudo ip netns exec red ping -c 3 8.8.8.8
