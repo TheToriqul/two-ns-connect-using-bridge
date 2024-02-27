@@ -2,17 +2,12 @@
 
 # Step 0: Check basic package installation & network status on host machine/root namespace
 sudo apt update -y
-sudo apt upgrage -y
-sudo apt install net-tools -y
-sudo apt install iproute2 -y
-sudo apt install iputils-ping -y
-sudo apt install tcpdump -y
-sudo apt install iptables -y
+sudo apt install net-tools iproute2 iputils-ping tcpdump iptables -y
 
-sudo ip link          # Display information about network interfaces
-sudo ip route         # Show the kernel routing table
-sudo route -n         # Show the kernel routing table (alternative command)
-sudo ip netns list    # List all network namespaces (using recommended command)
+sudo ip link                              # Display information about network interfaces
+sudo ip route                             # Show the kernel routing table
+sudo route -n                             # Show the kernel routing table (alternative command)
+sudo ip netns list                        # List all network namespaces (using recommended command)
 
 # Step 1: Create two network namespaces
 sudo ip netns add red                      # Create a network namespace named red
@@ -74,5 +69,12 @@ sudo ip netns exec green ping -c 2 192.168.1.11
 sudo ip netns exec green ping -c 2 192.168.1.1
 sudo ip netns exec green ping -c 2 192.168.1.10
 sudo ip netns exec green ping -c 2 <host_IP_address>
+
+# Step 6: Cleanup (Optional)
+sudo ip netns del red                          # Clean up network namespaces
+sudo ip netns del green
+sudo ip link del veth0                         # Clean up veth interfaces
+sudo ip link del veth1
+sudo ip link del br0                           # Clean up bridge interface (if not used elsewhere)
 
 # **Note:** This script creates resources that should be cleaned up after use. Consider adding cleanup logic for namespaces, veth interfaces, and iptables rules.
