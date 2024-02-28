@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Step 0: Check basic package installation & network status on host machine/root namespace
-sudo apt update -y
+sudo apt update && sudo apt upgrade -y
 sudo apt install net-tools iproute2 iputils-ping tcpdump iptables -y
 
 sudo ip link                              # Display information about network interfaces
