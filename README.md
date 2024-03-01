@@ -158,4 +158,4 @@ sudo apt install net-tools iproute2 iputils-ping tcpdump iptables -y
 
 In essence, the script meticulously constructs a network environment with isolated namespaces that can communicate internally and access the internet. It showcases fundamental concepts like bridging, NAT, and basic firewall rules to achieve this functionality.
 
-Feel free to ask if you have any further questions! *Email: ``` toriqul.int@gmail.com ```*
+Thanks for reading. Feel free to ask if you have any further questions! *Email: ``` toriqul.int@gmail.com ```*
